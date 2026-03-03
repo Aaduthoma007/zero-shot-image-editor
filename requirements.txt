@@ -1,0 +1,16 @@
+# ── Core ML ──────────────────────────────
+torch>=2.0.0
+torchvision>=0.15.0
+diffusers>=0.25.0
+transformers>=4.36.0
+accelerate>=0.25.0
+safetensors>=0.4.0
+
+# ── Image Processing ────────────────────
+Pillow>=10.0.0
+
+# ── Web Server ───────────────────────────
+flask>=3.0.0
+
+# ── Utilities ────────────────────────────
+peft>=0.7.0

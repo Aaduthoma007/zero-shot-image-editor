@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero-Shot Image Editor — AI-Powered Image Editing</title>
+    <meta name="description" content="Upload an image, describe your edit in natural language, and let Stable Diffusion transform it. Free, open-source, GPU-accelerated.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- ── Background particles ────────────────────────────────── -->
+    <div class="bg-particles" aria-hidden="true">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- ── Header ──────────────────────────────────────────────── -->
+    <header class="app-header">
+        <div class="logo">
+            <span class="logo-icon">✦</span>
+            <h1>Zero-Shot Editor</h1>
+        </div>
+        <p class="subtitle">AI-powered image editing with Stable Diffusion &amp; LoRA</p>
+    </header>
+
+    <!-- ── Main Content ────────────────────────────────────────── -->
+    <main class="container">
+
+        <!-- Upload Section -->
+        <section class="card upload-section" id="upload-section">
+            <h2 class="card-title">
+                <span class="step-badge">1</span>
+                Upload Your Image
+            </h2>
+            <div class="drop-zone" id="drop-zone">
+                <div class="drop-zone-content">
+                    <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 16V4m0 0L8 8m4-4l4 4"/>
+                        <path d="M2 17l.621 2.485A2 2 0 004.561 21h14.878a2 2 0 001.94-1.515L22 17"/>
+                    </svg>
+                    <p class="drop-text">Drag &amp; drop your image here</p>
+                    <p class="drop-subtext">or click to browse</p>
+                    <p class="drop-formats">PNG, JPG, JPEG, WebP — Max 16 MB</p>
+                </div>
+                <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp" hidden>
+            </div>
+            <div class="preview-container" id="upload-preview" style="display:none;">
+                <img id="preview-image" alt="Uploaded preview">
+                <button class="btn-remove" id="btn-remove" title="Remove image">✕</button>
+            </div>
+        </section>
+
+        <!-- Prompt Section -->
+        <section class="card prompt-section" id="prompt-section">
+            <h2 class="card-title">
+                <span class="step-badge">2</span>
+                Describe Your Edit
+            </h2>
+            <div class="prompt-input-wrapper">
+                <textarea
+                    id="prompt-input"
+                    placeholder="e.g., &quot;make it look like an oil painting&quot; or &quot;add dramatic sunset lighting&quot;"
+                    rows="3"
+                    maxlength="500"
+                ></textarea>
+                <span class="char-count" id="char-count">0 / 500</span>
+            </div>
+
+            <!-- Quick prompts -->
+            <div class="quick-prompts">
+                <span class="quick-label">Try:</span>
+                <button class="chip" data-prompt="make it look like a watercolor painting">🎨 Watercolor</button>
+                <button class="chip" data-prompt="transform into anime style, Studio Ghibli aesthetic">🌸 Anime</button>
+                <button class="chip" data-prompt="add dramatic cyberpunk neon lighting">🌃 Cyberpunk</button>
+                <button class="chip" data-prompt="convert to pencil sketch with detailed shading">✏️ Sketch</button>
+                <button class="chip" data-prompt="make it look like a vintage photograph">📷 Vintage</button>
+                <button class="chip" data-prompt="transform into impressionist painting, Monet style">🖼️ Impressionist</button>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="strength-slider">
+                        Edit Strength
+                        <span class="control-info" title="How much the image changes. Low = subtle, High = dramatic.">ⓘ</span>
+                    </label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="strength-slider" min="10" max="95" value="55" step="5">
+                        <span class="slider-value" id="strength-value">0.55</span>
+                    </div>
+                    <div class="slider-labels">
+                        <span>Subtle</span>
+                        <span>Dramatic</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="guidance-slider">
+                        Prompt Guidance
+                        <span class="control-info" title="How closely to follow the prompt. Higher = more literal.">ⓘ</span>
+                    </label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="guidance-slider" min="1" max="20" value="7.5" step="0.5">
+                        <span class="slider-value" id="guidance-value">7.5</span>
+                    </div>
+                    <div class="slider-labels">
+                        <span>Creative</span>
+                        <span>Literal</span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="steps-slider">
+                        Quality Steps
+                        <span class="control-info" title="More steps = higher quality but slower generation.">ⓘ</span>
+                    </label>
+                    <div class="slider-wrapper">
+                        <input type="range" id="steps-slider" min="10" max="60" value="30" step="5">
+                        <span class="slider-value" id="steps-value">30</span>
+                    </div>
+                    <div class="slider-labels">
+                        <span>Fast</span>
+                        <span>Quality</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-generate" id="btn-generate" disabled>
+                <span class="btn-text">✦ Generate Edit</span>
+                <span class="btn-loading" style="display:none;">
+                    <span class="spinner"></span>
+                    Generating...
+                </span>
+            </button>
+        </section>
+
+        <!-- Result Section -->
+        <section class="card result-section" id="result-section" style="display:none;">
+            <h2 class="card-title">
+                <span class="step-badge">3</span>
+                Result
+            </h2>
+
+            <!-- Before / After comparison -->
+            <div class="comparison-grid">
+                <div class="comparison-item">
+                    <span class="comparison-label">Original</span>
+                    <img id="result-original" alt="Original image">
+                </div>
+                <div class="comparison-item">
+                    <span class="comparison-label">Edited</span>
+                    <img id="result-edited" alt="Edited image">
+                </div>
+            </div>
+
+            <!-- Prompt analysis -->
+            <div class="analysis-panel" id="analysis-panel">
+                <h3>Prompt Analysis</h3>
+                <div class="analysis-grid" id="analysis-grid"></div>
+            </div>
+
+            <div class="result-actions">
+                <a class="btn-download" id="btn-download" download>
+                    ⬇ Download Edited Image
+                </a>
+                <button class="btn-secondary" id="btn-new-edit">
+                    ↻ New Edit
+                </button>
+            </div>
+        </section>
+
+        <!-- Loading Overlay -->
+        <div class="loading-overlay" id="loading-overlay" style="display:none;">
+            <div class="loading-card">
+                <div class="loading-spinner-large"></div>
+                <h3>Generating your edit...</h3>
+                <p class="loading-tip" id="loading-tip">First run downloads the model (~4 GB). This only happens once.</p>
+                <div class="loading-progress">
+                    <div class="loading-bar" id="loading-bar"></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ── Footer ──────────────────────────────────────────────── -->
+    <footer class="app-footer">
+        <p>Powered by <strong>Stable Diffusion</strong> + <strong>LoRA Transfer Learning</strong> &middot; Open Source &middot; No Paid APIs</p>
+    </footer>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
